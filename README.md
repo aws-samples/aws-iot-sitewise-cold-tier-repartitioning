@@ -3,7 +3,7 @@
 ## About this Repo
 This repo provides code samples to re-partition the AWS IoT SiteWise Cold storage tier data and store it into a destination Amazon S3 bucket. Re-partitioning helps with improving Athena query performance for query patterns encompassing multiple time series. 
 
-### How does it work?
+## How does it work?
 The samples provided downloads time series objects from cold tier S3 bucket, merges them into daily partitions, and finally, uploads to a destination S3 bucket. Post initial-run, only new data additions are re-partitioned. Following are a few supported scenarios.
 
 |Change in Asset Modeling | Supported? | 
