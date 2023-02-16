@@ -85,4 +85,4 @@ Here is a sample output.
 
 ## Important Notes
 1. You will incur additional storage costs for the re-partitioned data in Amazon S3
-2. Consider automating the execution workflow using [Amazon S3 Event Notifications](https://docs.aws.amazon.com/AmazonS3/latest/userguide/NotificationHowTo.html) and AWS Glue [Python shell job](https://docs.aws.amazon.com/glue/latest/dg/add-job-python.html)
+2. Consider automating the execution workflow using [Amazon S3 Event Notifications](https://docs.aws.amazon.com/AmazonS3/latest/userguide/NotificationHowTo.html) and AWS Glue [Python shell jobs](https://docs.aws.amazon.com/glue/latest/dg/add-job-python.html)
