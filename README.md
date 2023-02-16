@@ -1,7 +1,8 @@
-# AWS IoT SiteWise Cold storage tier Re-partitioning
+# AWS IoT SiteWise 
+storage tier Re-partitioning
 
 ## About this Repo
-This repo provides code samples to re-partition the AWS IoT SiteWise Cold storage tier data and store it into a destination Amazon S3 bucket. Re-partitioning helps with improving Athena query performance for query patterns encompassing multiple time series. The samples provided downloads time series objects from cold storage tier S3 bucket, merges them into daily partitions, and finally, uploads to destination S3 bucket.
+This repo provides code samples to re-partition the AWS IoT SiteWise Cold storage tier data and store it into a destination Amazon S3 bucket. Re-partitioning helps with improving Athena query performance for query patterns encompassing multiple time series. The samples provided downloads time series objects from cold tier S3 bucket, merges them into daily partitions, and finally, uploads to destination S3 bucket.
 
 Post initial-run, only new data additions are re-partitioned. Following are a few supported scenarios.
 
@@ -30,7 +31,7 @@ Review and update the configuration in the `config.yml` YAML file.
 
 `date_end` - end date in '%Y-%m-%d' format
 
-### 2) Download raw data from AWS IoT SiteWise Cold-tier S3 bucket
+### 2) Download raw data from AWS IoT SiteWise cold tier S3 bucket
 
 Run `download_cold_tier_data.py` to download existing AVRO data files in the Cold tier for the selected `date_start` and `date_end`. The script also downloads any existing `timeseries.txt` index file from the destination S3 bucket.
 
