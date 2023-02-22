@@ -56,7 +56,7 @@ If no new data is found, no further processing happens for the day
 ### 3) Merge data into daily partitions
 
 Run `repartition_data.py` to merge downloaded files in each day-wise directory.  
-| Before | After | 
+| Before merging | After merging | 
 | -- | -- |
 | Multiple `.AVRO` files per day | Single `.AVRO` file per day |
 | `timeseries.txt` and optionally `previous_timeseries.txt` per day | Single `timeseries.txt` file per day |
