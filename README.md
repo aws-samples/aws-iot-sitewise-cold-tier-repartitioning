@@ -20,7 +20,7 @@ Following are a few scenarios that were considered.
 | Recent or historical data ingested | Y |
 | Existing data overwritten | N |
 
-## How to use
+## How to use?
 ### 1) Configure
 Review and update the configuration in the `config.yml` YAML file.
 
