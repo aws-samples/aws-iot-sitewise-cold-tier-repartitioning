@@ -19,14 +19,16 @@ with open(f'{root_dir}/config.yml', 'r') as file:
 
 timeseries_type = config['timeseries_type']
 cold_tier_bucket_name = config['s3_buckets']['cold_tier_bucket_name']
+cold_tier_bucket_prefix = config['s3_buckets']['cold_tier_bucket_prefix']
 repartitioned_data_bucket_name = config['s3_buckets']['repartitioned_data_bucket_name']
+repartitioned_data_bucket_prefix = config['s3_buckets']['repartitioned_data_bucket_prefix']
 date_start = config['date_range']['date_start']
 date_end = config['date_range']['date_end']
 local_tmp_raw_dir_name = config['local_dirs']['local_tmp_raw_dir_name']
 TMP_SITEWISE_PATH = '/tmp/sitewise'
 local_tmp_raw_dir_path = f'{TMP_SITEWISE_PATH}/{local_tmp_raw_dir_name}'
    
-def filter_keys(keys, all_timeseries_ids: list[str], previous_timeseries_ids: list[str]) -> list[str]:
+def filter_keys(keys, all_timeseries_ids: list, previous_timeseries_ids: list) -> list:
     """Filter S3 keys whose timeseries is 1/ part of the target 
     timeseries list and 2/ not previously processed for the day
     """
@@ -40,7 +42,7 @@ def filter_keys(keys, all_timeseries_ids: list[str], previous_timeseries_ids: li
     
     return filtered_keys, new_timeseries_ids
 
-def process_objects(filtered_keys: list[str], day_wise_folder: str) -> None:
+def process_objects(filtered_keys: list, day_wise_folder: str) -> None:
     """Download the S3 files into day-wise directory
     """  
     download_start = time.time()
@@ -59,6 +61,7 @@ def start() -> None:
     date_loop_dt = date_end_dt
     
     # Get the list of all relevant timeseries ids from SiteWise
+    print(f'Starting to get {timeseries_type} timeseries between {date_start_dt} and {date_end_dt}')
     all_timeseries_ids = sitewise_helper.get_all_timeseries_ids()
     print(f'Configured timeseries mode: {timeseries_type}')
     print(f'Total timeseries identified: {len(all_timeseries_ids)}')
@@ -70,45 +73,51 @@ def start() -> None:
     # Loop through the configured time periodcd ..
     while date_loop_dt >= date_start_dt:
         s3_day_prefix = f'startYear={date_loop_dt.strftime("%Y")}/startMonth={date_loop_dt.month}/startDay={date_loop_dt.day}/'
-        day_wise_folder = f"{date_loop_dt.year}-{date_loop_dt.month}-{date_loop_dt.day}"
-        raw_day_wise_folder_path = f"{local_tmp_raw_dir_path}/{day_wise_folder}"
-
-        # Create daily directories if doesn't exist
-        if not os.path.exists(raw_day_wise_folder_path): os.mkdir(raw_day_wise_folder_path)  
         
         # Get a list of all s3 object keys for the day
-        s3_object_keys = s3_helper.get_all_s3_objects(cold_tier_bucket_name, f'raw/{s3_day_prefix}')
+        print(f'Getting all keys from bucket: {cold_tier_bucket_name} for prefix: {cold_tier_bucket_prefix}/raw/{s3_day_prefix}')
+        s3_object_keys = s3_helper.get_all_s3_objects(cold_tier_bucket_name, f'{cold_tier_bucket_prefix}/raw/{s3_day_prefix}')
         
-        s3_index_prefix = f'index/{s3_day_prefix}'
-        previous_index_key = f'{s3_index_prefix}timeseries.txt'
-        previous_timeseries_ids = []
-        
-        print(f'\nReviewing --> year: {date_loop_dt.year}, month: {date_loop_dt.month}, day: {date_loop_dt.day}')
-
-        # Download and read previous index file for the day, if exists
-        if s3_helper.s3_prefix_exists(repartitioned_data_bucket_name, previous_index_key):
-            previous_index_local_path = local_tmp_raw_dir_path + '/' + day_wise_folder + '/timeseries-previous.txt'
-            with open(previous_index_local_path, 'w+b') as f1:
-                s3_helper.download_fileobj(repartitioned_data_bucket_name, previous_index_key, f1)
-            with open(previous_index_local_path, 'r') as f2:
-                previous_timeseries_ids = f2.read().splitlines()
-            print(f'\t# of timeseries previously processed: {len(previous_timeseries_ids)}')
-
-        filtered_keys, new_timeseries_ids = filter_keys(s3_object_keys, all_timeseries_ids, previous_timeseries_ids)
-
-        # Create local index for newly detected timeseries
-        new_timeseries_count = len(new_timeseries_ids)
-        if new_timeseries_count > 0:
-            print(f'\t# of new timeseries detected: {new_timeseries_count}')
-            with open(local_tmp_raw_dir_path + '/' + day_wise_folder + '/timeseries-new.txt', 'w') as f:
-                f.write('\n'.join(new_timeseries_ids))
-        # Start processing objects
-        if len(filtered_keys) > 0:
-            print(f'\tFound data, starting to download')
-            process_objects(filtered_keys, day_wise_folder)
+        if len(s3_object_keys) == 0:
+            print(f'\nNo Cold Tier data for the current day in following s3 prefix: {s3_day_prefix}. Skipping this day')
         else:
-            print(f'\tSkip, no new data')
-
+            
+            day_wise_folder = f"{date_loop_dt.year}-{date_loop_dt.month}-{date_loop_dt.day}"
+            raw_day_wise_folder_path = f"{local_tmp_raw_dir_path}/{day_wise_folder}"
+            
+            # Create daily directories if doesn't exist - moving this inside the IF statement fixed the bug when there was no data in provided partition
+            if not os.path.exists(raw_day_wise_folder_path): os.mkdir(raw_day_wise_folder_path)  
+            
+            s3_index_prefix = f'index/{s3_day_prefix}'
+            previous_index_key = f'{s3_index_prefix}timeseries.txt'
+            previous_timeseries_ids = []
+            
+            print(f'\nReviewing --> year: {date_loop_dt.year}, month: {date_loop_dt.month}, day: {date_loop_dt.day}')
+    
+            # Download and read previous index file for the day, if exists
+            if s3_helper.s3_prefix_exists(repartitioned_data_bucket_name, previous_index_key):
+                previous_index_local_path = local_tmp_raw_dir_path + '/' + day_wise_folder + '/timeseries-previous.txt'
+                with open(previous_index_local_path, 'w+b') as f1:
+                    s3_helper.download_fileobj(repartitioned_data_bucket_name, previous_index_key, f1)
+                with open(previous_index_local_path, 'r') as f2:
+                    previous_timeseries_ids = f2.read().splitlines()
+                print(f'\t# of timeseries previously processed: {len(previous_timeseries_ids)}')
+    
+            filtered_keys, new_timeseries_ids = filter_keys(s3_object_keys, all_timeseries_ids, previous_timeseries_ids)
+    
+            # Create local index for newly detected timeseries
+            new_timeseries_count = len(new_timeseries_ids)
+            if new_timeseries_count > 0:
+                print(f'\t# of new timeseries detected: {new_timeseries_count}')
+                with open(local_tmp_raw_dir_path + '/' + day_wise_folder + '/timeseries-new.txt', 'w') as f:
+                    f.write('\n'.join(new_timeseries_ids))
+            # Start processing objects
+            if len(filtered_keys) > 0:
+                print(f'\tFound data, starting to download')
+                process_objects(filtered_keys, day_wise_folder)
+            else:
+                print(f'\tSkip, no new data')
+        
         date_loop_dt = date_loop_dt - timedelta(days=1)
 
 if __name__ == "__main__":

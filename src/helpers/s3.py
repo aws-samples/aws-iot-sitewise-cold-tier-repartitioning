@@ -26,7 +26,7 @@ def s3_prefix_exists(bucket: str, key: str) -> bool:
     result = s3_client.list_objects_v2(Bucket=bucket, Prefix=key)
     return True if 'Contents' in result else False
 
-def list_s3_objects(bucket: str, prefix: str, StartAfter: str) -> list[str]:
+def list_s3_objects(bucket: str, prefix: str, StartAfter: str) -> list:
     """Get all S3 objects for the page
     """
     s3_object_keys=[]
@@ -38,7 +38,7 @@ def list_s3_objects(bucket: str, prefix: str, StartAfter: str) -> list[str]:
         s3_object_keys = [obj["Key"] for obj in response["Contents"]]
     return s3_object_keys, response["IsTruncated"]
 
-def get_all_s3_objects(bucket, prefix: str) -> list[str]:
+def get_all_s3_objects(bucket, prefix: str) -> list:
     """Get all S3 objects for the provided prefix from all pages
     """
     s3_object_keys_all=[]
@@ -68,7 +68,7 @@ def timeseries_id_from_key(key: str) -> str:
     timeseries_id = file_name.split('_')[1]
     return timeseries_id
 
-def download_s3_objects(bucket: str, keys: list[str]) -> None:
+def download_s3_objects(bucket: str, keys: list) -> None:
     """Download S3 objects based on the provided keys
     """
     for key in keys:
