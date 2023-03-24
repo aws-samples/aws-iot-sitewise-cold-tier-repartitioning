@@ -3,10 +3,10 @@ timeseries_type: 'ASSOCIATED' #Retrieve only associated or disassociated series
 
 # Configure S3 Bucket Names
 s3_buckets:
-  cold_tier_bucket_name: 'bms-sitewise-854124268029-us-east-1-dev'
-  cold_tier_bucket_prefix: 'mls'
-  repartitioned_data_bucket_name: 'bms-sitewise-854124268029-us-east-1-dev'
-  repartitioned_data_bucket_prefix: 'sitewise-consolidated-tier'
+  cold_tier_bucket_name: ''
+  cold_tier_bucket_prefix: ''
+  repartitioned_data_bucket_name: ''
+  repartitioned_data_bucket_prefix: ''
 
 # Configure temporary local directories for processing
 local_dirs:
