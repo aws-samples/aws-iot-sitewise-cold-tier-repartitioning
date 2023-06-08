@@ -7,6 +7,7 @@ import time
 import yaml
 from itertools import repeat
 from multiprocessing import cpu_count, Pool, freeze_support
+import shutil
 import helpers.s3 as s3_helper 
 import helpers.sitewise as sitewise_helper
 
@@ -19,9 +20,10 @@ with open(f'{root_dir}/config.yml', 'r') as file:
 
 timeseries_type = config['timeseries_type']
 cold_tier_bucket_name = config['s3_buckets']['cold_tier_bucket_name']
-cold_tier_bucket_prefix = config['s3_buckets']['cold_tier_bucket_prefix']
-repartitioned_data_bucket_name = config['s3_buckets']['repartitioned_data_bucket_name']
-repartitioned_data_bucket_prefix = config['s3_buckets']['repartitioned_data_bucket_prefix']
+cold_tier_bucket_data_prefix = config['s3_buckets']['cold_tier_bucket_data_prefix']
+repartitioned_bucket_name = config['s3_buckets']['repartitioned_bucket_name']
+repartitioned_bucket_data_prefix = config['s3_buckets']['repartitioned_bucket_data_prefix']
+repartitioned_bucket_index_prefix = config['s3_buckets']['repartitioned_bucket_index_prefix']
 date_start = config['date_range']['date_start']
 date_end = config['date_range']['date_end']
 local_tmp_raw_dir_name = config['local_dirs']['local_tmp_raw_dir_name']
@@ -61,9 +63,14 @@ def start() -> None:
     date_loop_dt = date_end_dt
     
     # Get the list of all relevant timeseries ids from SiteWise
-    print(f'Starting to get {timeseries_type} timeseries between {date_start_dt} and {date_end_dt}')
+    print(f'Starting to process timeseries data between {date_start_dt} and {date_end_dt}')
     all_timeseries_ids = sitewise_helper.get_all_timeseries_ids()
     print(f'Configured timeseries mode: {timeseries_type}')
+    print(f'Configured cold tier bucket name: {cold_tier_bucket_name}')
+    print(f'Configured cold tier bucket data prefix: {cold_tier_bucket_data_prefix}')
+    print(f'Configured repartitioned bucket name: {repartitioned_bucket_name}')
+    print(f'Configured repartitioned bucket data prefix: {repartitioned_bucket_data_prefix}')
+    print(f'Configured repartitioned bucket index prefix: {repartitioned_bucket_index_prefix}')
     print(f'Total timeseries identified: {len(all_timeseries_ids)}')
  
     # Create daily directories if doesn't exist
@@ -73,32 +80,28 @@ def start() -> None:
     # Loop through the configured time periodcd ..
     while date_loop_dt >= date_start_dt:
         s3_day_prefix = f'startYear={date_loop_dt.strftime("%Y")}/startMonth={date_loop_dt.month}/startDay={date_loop_dt.day}/'
-        
+        print(f'\nReviewing --> year: {date_loop_dt.year}, month: {date_loop_dt.month}, day: {date_loop_dt.day}')
         # Get a list of all s3 object keys for the day
-        print(f'Getting all keys from bucket: {cold_tier_bucket_name} for prefix: {cold_tier_bucket_prefix}/raw/{s3_day_prefix}')
-        s3_object_keys = s3_helper.get_all_s3_objects(cold_tier_bucket_name, f'{cold_tier_bucket_prefix}/raw/{s3_day_prefix}')
-        
+        print(f'\tRetrieving all keys with prefix: {cold_tier_bucket_data_prefix}{s3_day_prefix}')
+        s3_object_keys = s3_helper.get_all_s3_objects1(cold_tier_bucket_name, f'{cold_tier_bucket_data_prefix}{s3_day_prefix}')
+ 
         if len(s3_object_keys) == 0:
-            print(f'\nNo Cold Tier data for the current day in following s3 prefix: {s3_day_prefix}. Skipping this day')
+            print(f'\tNo Cold tier data! Skipping this day')
         else:
-            
             day_wise_folder = f"{date_loop_dt.year}-{date_loop_dt.month}-{date_loop_dt.day}"
             raw_day_wise_folder_path = f"{local_tmp_raw_dir_path}/{day_wise_folder}"
             
             # Create daily directories if doesn't exist - moving this inside the IF statement fixed the bug when there was no data in provided partition
             if not os.path.exists(raw_day_wise_folder_path): os.mkdir(raw_day_wise_folder_path)  
             
-            s3_index_prefix = f'index/{s3_day_prefix}'
-            previous_index_key = f'{s3_index_prefix}timeseries.txt'
+            previous_index_key = f'{repartitioned_bucket_index_prefix}{s3_day_prefix}timeseries.txt'
             previous_timeseries_ids = []
             
-            print(f'\nReviewing --> year: {date_loop_dt.year}, month: {date_loop_dt.month}, day: {date_loop_dt.day}')
-    
             # Download and read previous index file for the day, if exists
-            if s3_helper.s3_prefix_exists(repartitioned_data_bucket_name, previous_index_key):
+            if s3_helper.s3_prefix_exists(repartitioned_bucket_name, previous_index_key):
                 previous_index_local_path = local_tmp_raw_dir_path + '/' + day_wise_folder + '/timeseries-previous.txt'
                 with open(previous_index_local_path, 'w+b') as f1:
-                    s3_helper.download_fileobj(repartitioned_data_bucket_name, previous_index_key, f1)
+                    s3_helper.download_fileobj(repartitioned_bucket_name, previous_index_key, f1)
                 with open(previous_index_local_path, 'r') as f2:
                     previous_timeseries_ids = f2.read().splitlines()
                 print(f'\t# of timeseries previously processed: {len(previous_timeseries_ids)}')
@@ -111,12 +114,15 @@ def start() -> None:
                 print(f'\t# of new timeseries detected: {new_timeseries_count}')
                 with open(local_tmp_raw_dir_path + '/' + day_wise_folder + '/timeseries-new.txt', 'w') as f:
                     f.write('\n'.join(new_timeseries_ids))
+
             # Start processing objects
             if len(filtered_keys) > 0:
-                print(f'\tFound data, starting to download')
+                print(f'\tFound new data to process, starting to download')
                 process_objects(filtered_keys, day_wise_folder)
             else:
                 print(f'\tSkip, no new data')
+                # Remove any existing directory
+                if os.path.exists(raw_day_wise_folder_path): shutil.rmtree(raw_day_wise_folder_path)
         
         date_loop_dt = date_loop_dt - timedelta(days=1)
 

@@ -7,10 +7,11 @@ timeseries_type: 'ASSOCIATED' #Retrieve only associated or disassociated series
 
 # Configure S3 Bucket Names
 s3_buckets:
-  cold_tier_bucket_name: 'coldtier2'
-  cold_tier_bucket_prefix: ''
-  repartitioned_data_bucket_name: 'sitewise-consolidated-tier-2'
-  repartitioned_data_bucket_prefix: ''
+  cold_tier_bucket_name: 'sitewise-cold-tier'
+  cold_tier_bucket_data_prefix: 'raw/'
+  repartitioned_bucket_name: 'sitewise-consolidated-tier-2'
+  repartitioned_bucket_data_prefix: 'consolidated/'
+  repartitioned_bucket_index_prefix: 'index/'
 
 # Configure temporary local directories for processing
 local_dirs:
@@ -19,5 +20,5 @@ local_dirs:
 
 # Configure time range of SiteWise Cold Tier data to be processed
 date_range:
-  date_start: "2022-12-25"
-  date_end: "2023-01-05"
+  date_start: "2023-01-01"
+  date_end: "2023-01-31"

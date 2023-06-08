@@ -28,15 +28,21 @@ Review and update the configuration in the `config.yml` YAML file.
 
 `cold_tier_bucket_name` - name of the S3 bucket configured in AWS IoT SiteWise Cold tier settings.
 
-`repartitioned_data_bucket_name` - destination S3 bucket name to store the re-partitioned data
+`cold_tier_bucket_data_prefix` - root prefix of all date partitions for data objects, default is `raw/`.
+
+`repartitioned_bucket_name` - destination S3 bucket name to store the re-partitioned data
+
+`repartitioned_bucket_data_prefix` - root prefix of all date partitions for data objects, default is `consolidated/`.
+
+`repartitioned_bucket_index_prefix` - root prefix of all date partitions for index objects, default is `index/`.
 
 `local_tmp_raw_dir_name` - local directory name for temporarily storing raw downloaded data
 
 `local_tmp_merged_dir_name` - local directory name for temporarily storing merged data
 
-`date_start` - start date in '%Y-%m-%d' format
+`date_start` - start date in %Y-%m-%d format, e.g., 2023-01-01
 
-`date_end` - end date in '%Y-%m-%d' format
+`date_end` - end date in %Y-%m-%d format, e.g., 2023-01-31
 
 ### 2) Download raw data from AWS IoT SiteWise cold tier S3 bucket
 
@@ -44,11 +50,12 @@ Run `download_cold_tier_data.py` to download existing AVRO data files in the Col
 
 `timeseries.txt` - a new-line delimited plain text file that stores the list of all time series ids processed in previous runs.
 
-The script reviews the Cold tier data for each day and skips processing if the data was already re-partitioned previously.
+The script reviews the cold tier data for each day and skips processing if the data was already re-partitioned previously.
 
 If there's new data, corresponding S3 objects will be downloaded to day-wise local directories
 
     Reviewing --> year: 2023, month: 1, day: 25
+            Retrieving all keys with prefix: raw/startYear=2023/startMonth=1/startDay=25/
             # of new timeseries detected: 35
             Found data, starting to download
             Downloading S3 objects to local filesystem..
@@ -57,6 +64,7 @@ If there's new data, corresponding S3 objects will be downloaded to day-wise loc
 If no new data is found, no further processing happens for the day
 
     Reviewing --> year: 2023, month: 1, day: 10
+            Retrieving all keys with prefix: raw/startYear=2023/startMonth=1/startDay=10/
             # of timeseries previously processed: 50
             Skip, no new data
 

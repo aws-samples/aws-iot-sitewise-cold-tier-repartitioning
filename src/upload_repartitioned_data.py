@@ -17,8 +17,9 @@ root_dir = os.path.abspath(os.path.dirname(dir))
 with open(f'{root_dir}/config.yml', 'r') as file:
     config = yaml.safe_load(file)
 
-repartitioned_data_bucket_name = config['s3_buckets']['repartitioned_data_bucket_name']
-repartitioned_data_bucket_prefix = config['s3_buckets']['repartitioned_data_bucket_prefix']
+repartitioned_bucket_name = config['s3_buckets']['repartitioned_bucket_name']
+repartitioned_bucket_data_prefix = config['s3_buckets']['repartitioned_bucket_data_prefix']
+repartitioned_bucket_index_prefix = config['s3_buckets']['repartitioned_bucket_index_prefix']
 local_tmp_raw_dir_name = config['local_dirs']['local_tmp_raw_dir_name']
 local_tmp_merged_dir_name = config['local_dirs']['local_tmp_merged_dir_name']
 TMP_SITEWISE_PATH = '/tmp/sitewise'
@@ -34,7 +35,7 @@ def get_avro_file_name(day_directory):
         if name.endswith(".avro"): file_name = name
     return file_name
     
-def upload_to_repartitioned_data_s3_bucket(day_directory: str) -> None:
+def upload_to_repartitioned_s3_bucket(day_directory: str) -> None:
     """Upload merged files to the new S3 bucket
     """  
     folder_date = datetime.strptime(day_directory, '%Y-%m-%d').date()
@@ -45,20 +46,20 @@ def upload_to_repartitioned_data_s3_bucket(day_directory: str) -> None:
     merged_folder_day_path = local_tmp_merged_dir_path + "/" + day_directory
 
     local_data_file_name = get_avro_file_name(merged_folder_day_path)
-    print(f'Local data file name: {local_data_file_name}')
+    
     if not local_data_file_name: return False
     local_data_file_path = f'{merged_folder_day_path}/{local_data_file_name}'
     local_index_file_path = merged_folder_day_path + "/timeseries.txt"
     
     # Configure S3 keys
-    s3_data_file_key_name = f'{repartitioned_data_bucket_prefix}/consolidated/{s3_day_prefix}{local_data_file_name}'
-    s3_index_file_key_name = f'index/{s3_day_prefix}timeseries.txt'
+    s3_data_file_key_name = f'{repartitioned_bucket_data_prefix}{s3_day_prefix}{local_data_file_name}'
+    s3_index_file_key_name = f'{repartitioned_bucket_index_prefix}{s3_day_prefix}timeseries.txt'
 
     upload_start = time.time()
 
-    s3_helper.upload_file_to_s3(repartitioned_data_bucket_name, local_data_file_path, s3_data_file_key_name)
+    s3_helper.upload_file_to_s3(repartitioned_bucket_name, local_data_file_path, s3_data_file_key_name)
     # Upload and overwrite if index file already exists in S3
-    s3_helper.upload_file_to_s3(repartitioned_data_bucket_name, local_index_file_path, s3_index_file_key_name)
+    s3_helper.upload_file_to_s3(repartitioned_bucket_name, local_index_file_path, s3_index_file_key_name)
     print(f"{day_directory}: ** Upload Time: {round(time.time() - upload_start)} secs **")
     
     # Clean up the file system
@@ -68,7 +69,7 @@ def upload_to_repartitioned_data_s3_bucket(day_directory: str) -> None:
 if __name__ == "__main__":
     freeze_support()
     print(f"Started uploading re-partitioned AVRO data files and index file for each day")
-    Pool(cpu_count() - 1).map(upload_to_repartitioned_data_s3_bucket,
+    Pool(cpu_count() - 1).map(upload_to_repartitioned_s3_bucket,
     os_helper.visible_child_dirs(local_tmp_merged_dir_path))
     shutil.rmtree(f'{TMP_SITEWISE_PATH}')
     print("\nScript execution successfully completed!!")

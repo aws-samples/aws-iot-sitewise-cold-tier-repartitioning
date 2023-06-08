@@ -13,7 +13,7 @@ with open(f'{root_dir}/config.yml', 'r') as file:
     config = yaml.safe_load(file)
 
 cold_tier_bucket_name = config['s3_buckets']['cold_tier_bucket_name']
-repartitioned_data_bucket_name = config['s3_buckets']['repartitioned_data_bucket_name']
+repartitioned_data_bucket_name = config['s3_buckets']['repartitioned_bucket_name']
 local_tmp_raw_dir_name = config['local_dirs']['local_tmp_raw_dir_name']
 local_tmp_raw_dir_path = f'/tmp/sitewise/{local_tmp_raw_dir_name}'
 
@@ -34,12 +34,12 @@ def list_s3_objects(bucket: str, prefix: str, StartAfter: str) -> list:
  
     response = s3_client.list_objects_v2(Bucket=bucket, Prefix=prefix,
         StartAfter=StartAfter)
-
+    print(response)
     if 'Contents' in response:
         s3_object_keys = [obj["Key"] for obj in response["Contents"]]
     return s3_object_keys, response["IsTruncated"]
 
-def get_all_s3_objects(bucket, prefix: str) -> list:
+def get_all_s3_objects(bucket: str, prefix: str) -> list:
     """Get all S3 objects for the provided prefix from all pages
     """
     s3_object_keys_all=[]
@@ -52,6 +52,19 @@ def get_all_s3_objects(bucket, prefix: str) -> list:
         if len(s3_object_keys) > 0:
             key_marker = s3_object_keys[-1]
         
+    return s3_object_keys_all
+
+def get_all_s3_objects1(bucket: str, prefix: str) -> list:
+    s3_object_keys_all=[]
+    paginator = s3_client.get_paginator('list_objects_v2')
+    operation_parameters = {'Bucket': bucket,
+                        'Prefix': prefix}
+    page_iterator = paginator.paginate(**operation_parameters)
+
+    for page in page_iterator:
+        if 'Contents' in page:
+            s3_object_keys = [obj["Key"] for obj in page["Contents"]]
+            s3_object_keys_all.extend(s3_object_keys)
     return s3_object_keys_all
 
 def filename_from_key(key: str) -> str:
