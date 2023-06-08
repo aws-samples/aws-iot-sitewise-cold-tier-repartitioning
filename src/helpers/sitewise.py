@@ -14,7 +14,8 @@ with open(f'{root_dir}/config.yml', 'r') as file:
 timeseries_type = config['timeseries_type']
 
 # Configure SiteWise client
-sw_client = boto3.client('iotsitewise')
+session = boto3.Session(profile_name=config['credentials']['profile'])    
+sw_client = session.client('iotsitewise')
 
 def get_timeseries_ids(next_token: str) -> list[str]:
     """Get list of timeseries ids for the page

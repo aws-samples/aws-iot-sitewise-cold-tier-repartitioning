@@ -1,10 +1,14 @@
+# configure AWS credentials
+credentials:
+  profile: 'bulkimport'
+
 # configure timeseries type
 timeseries_type: 'ASSOCIATED' #Retrieve only associated or disassociated series
 
 # Configure S3 Bucket Names
 s3_buckets:
-  cold_tier_bucket_name: 'sitewise-cold-tier'
-  repartitioned_data_bucket_name: 'sitewise-consolidated-tier'
+  cold_tier_bucket_name: 'coldtier2'
+  repartitioned_data_bucket_name: 'sitewise-consolidated-tier-2'
 
 # Configure temporary local directories for processing
 local_dirs:
@@ -13,5 +17,5 @@ local_dirs:
 
 # Configure time range of SiteWise Cold Tier data to be processed
 date_range:
-  date_start: "2023-01-15"
-  date_end: "2023-01-25"
+  date_start: "2022-12-25"
+  date_end: "2023-01-05"
