@@ -18,6 +18,7 @@ with open(f'{root_dir}/config.yml', 'r') as file:
     config = yaml.safe_load(file)
 
 repartitioned_data_bucket_name = config['s3_buckets']['repartitioned_data_bucket_name']
+repartitioned_data_bucket_prefix = config['s3_buckets']['repartitioned_data_bucket_prefix']
 local_tmp_raw_dir_name = config['local_dirs']['local_tmp_raw_dir_name']
 local_tmp_merged_dir_name = config['local_dirs']['local_tmp_merged_dir_name']
 TMP_SITEWISE_PATH = '/tmp/sitewise'
@@ -44,12 +45,13 @@ def upload_to_repartitioned_data_s3_bucket(day_directory: str) -> None:
     merged_folder_day_path = local_tmp_merged_dir_path + "/" + day_directory
 
     local_data_file_name = get_avro_file_name(merged_folder_day_path)
+    print(f'Local data file name: {local_data_file_name}')
     if not local_data_file_name: return False
     local_data_file_path = f'{merged_folder_day_path}/{local_data_file_name}'
     local_index_file_path = merged_folder_day_path + "/timeseries.txt"
     
     # Configure S3 keys
-    s3_data_file_key_name = f'consolidated/{s3_day_prefix}{local_data_file_name}'
+    s3_data_file_key_name = f'{repartitioned_data_bucket_prefix}/consolidated/{s3_day_prefix}{local_data_file_name}'
     s3_index_file_key_name = f'index/{s3_day_prefix}timeseries.txt'
 
     upload_start = time.time()
