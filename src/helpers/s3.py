@@ -18,7 +18,8 @@ local_tmp_raw_dir_name = config['local_dirs']['local_tmp_raw_dir_name']
 local_tmp_raw_dir_path = f'/tmp/sitewise/{local_tmp_raw_dir_name}'
 
 # Create an S3 client
-s3_client = boto3.client('s3')
+session = boto3.Session(profile_name=config['credentials']['profile'])    
+s3_client = session.client('s3')
 
 def s3_prefix_exists(bucket: str, key: str) -> bool:
     """Check if a prefix exists
