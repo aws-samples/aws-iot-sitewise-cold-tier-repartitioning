@@ -1,5 +1,4 @@
 .DS_Store
 .idea*
 __pycache__/
-src/helpers/job_helpers/globals.py
-job_names.txt
+src/helpers/globals.py
