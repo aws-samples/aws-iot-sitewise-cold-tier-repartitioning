@@ -108,7 +108,7 @@ The following files will be uploaded to the S3 bucket configured at `s3.glue_ass
 Run `make execute {from} {to} {days_per_job}` to create ETL jobs for processing data between a given date range.
 
 |Option | Description |
-|----|----|----|
+|----|----|
 |`from` (string) | Start date in '%Y-%m-%d' format |
 |`to` (string) | End date in '%Y-%m-%d' format |
 |`days_per_job` (integer) | Maximum number of days to be processed by a single job |
@@ -162,7 +162,7 @@ Run `make cleanup` to delete the ended jobs. Only ended jobs with the tag "sourc
 
 ## Stages in a job
 
-Each job consists of three main stages as outlined below. You can monitor and troubleshoot these stages using the logs at **[CloudWatch](https://console.aws.amazon.com/cloudwatch/home)** &rarr; **Logs** &rarr; **Log groups** &rarr; `/aws-glue/jobs/output`
+Each job consists of three main stages as outlined below. You can monitor and troubleshoot these stages using the logs at **[Amazon CloudWatch](https://console.aws.amazon.com/cloudwatch/home)** &rarr; **Logs** &rarr; **Log groups** &rarr; `/aws-glue/jobs/output`
 ### 1) Download raw data from IoT SiteWise cold tier storage
 In this stage, AVRO data files for the given date range are downloaded from the IoT SiteWise cold tier S3 bucket. If the data has already been processed previously for a given day (tracked in `timeseries.txt`), the script skips downloading the data for the day.
 

@@ -4,12 +4,12 @@ timeseries_type: 'ASSOCIATED' #Retrieve only associated or disassociated series
 # Configure S3 Bucket Names
 s3:
   cold_tier:
-    bucket_name: 'coldtier2'
+    bucket_name: '<your_bucket_name>'
     data_prefix: 'raw/'
   repartitioned:
-    bucket_name: 'sitewise-consolidated-tier-1'
+    bucket_name: '<your_bucket_name>'
     data_prefix: 'consolidated/'
     index_prefix: 'index/'
   glue_assets:
-    bucket_name: 'sitewise-cold-tier-repartitioning-assets'
+    bucket_name: '<your_bucket_name>'
     scripts_prefix: 'scripts/'

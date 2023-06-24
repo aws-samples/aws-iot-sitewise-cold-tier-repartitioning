@@ -1,13 +1,13 @@
 # Configure AWS Credentials 
 # Credentials configured using environment variables will take precedence over profile
-profile = bulkimport1
+profile = default
 
 # Python
 python_alias = python3
 
 # Configure Glue jobs
 job_name_prefix = sitewise-cold-tier-repartitioning
-glue_role_arn = arn:aws:iam::525990660317:role/SiteWiseRepartitioningGlueRole
+glue_role_arn = <your_glue_role_arn>
 
 export AWS_PROFILE := $(profile)
 
