@@ -1,4 +1,2 @@
-avro-python3==1.10.2
 boto3==1.26.94
-python-snappy==0.6.1
 PyYAML==6.0

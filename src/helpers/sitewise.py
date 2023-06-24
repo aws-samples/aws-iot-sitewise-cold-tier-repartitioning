@@ -2,22 +2,21 @@
 # SPDX-License-Identifier: MIT-0
 
 import os
-import yaml
-import boto3
+from typing import List, Dict
+from . import globals
+from . import common as common_helper
 
 dir = os.path.abspath(os.path.dirname(__file__))
 root_dir = os.path.abspath(os.path.dirname(os.path.dirname(dir)))
 
 # Load configuration
-with open(f'{root_dir}/config.yml', 'r') as file:
-    config = yaml.safe_load(file)
+config = globals.config
 timeseries_type = config['timeseries_type']
 
 # Configure SiteWise client
-session = boto3.Session(profile_name=config['credentials']['profile'])    
-sw_client = session.client('iotsitewise')
+sw_client = common_helper.get_client('iotsitewise')
 
-def get_timeseries_ids(next_token: str) -> list[str]:
+def get_timeseries_ids(next_token: str) -> List[str]:
     """Get list of timeseries ids for the page
     """
     if len(next_token) > 0:
@@ -34,7 +33,7 @@ def get_timeseries_ids(next_token: str) -> list[str]:
     else: 
         return timeseries_ids, ""
 
-def get_all_timeseries_ids() -> list[str]:
+def get_all_timeseries_ids() -> List[str]:
     """Get list of timeseries ids from all the pages
     """
     timeseries_ids_all=[]
