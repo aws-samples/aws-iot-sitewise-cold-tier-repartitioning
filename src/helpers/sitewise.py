@@ -3,6 +3,7 @@
 
 import os
 from typing import List, Dict
+import time
 from . import globals
 from . import common as common_helper
 
@@ -41,6 +42,7 @@ def get_all_timeseries_ids() -> List[str]:
     next_token=""
     
     while has_more_records:
+        time.sleep(2)
         timeseries_ids,next_token = get_timeseries_ids(next_token)
         timeseries_ids_all.extend(timeseries_ids)
         has_more_records=False if next_token == "" else True
