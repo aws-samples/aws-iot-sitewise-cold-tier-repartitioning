@@ -115,7 +115,7 @@ Run `make execute {from} {to} {days_per_job}` to create ETL jobs for processing 
 
 **Example**: `make execute from=2023-05-01 to=2023-05-15 days_per_job=5`
 
-Several ETL jobs will be created to horizontally scale the work depending on the parallelization defined at `days_per_job`. The following table provides a few examples:
+Several ETL jobs will be created to horizontally scale the work depending on the parallelization defined at `days_per_job`. The table below provides a few examples:
 |`from` | `to` | # of days | `days_per_job` | # of jobs |
 |----|----|----|----|----|
 | 2022-01-01 | 2022-01-31 | 31 | 1 | 31 |
